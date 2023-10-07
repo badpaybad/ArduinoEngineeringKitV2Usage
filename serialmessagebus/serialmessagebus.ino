@@ -33,7 +33,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   // Serial.write(45); // send a byte with the value 45
 
-
+  Serial.write("hi777777777777777777777777777");
 
   if (lastMsg != "") {
     const char* teststr = lastMsg.c_str();
@@ -41,8 +41,8 @@ void loop() {
 
 
     servo3.setAngle(60 - direction * 30);
-    
-    lastMsg="";
+
+    lastMsg = "";
   }
 
 
