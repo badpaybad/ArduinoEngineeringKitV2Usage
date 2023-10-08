@@ -20,6 +20,16 @@ int main(int argc, char *argv[])
     char buf[256];
     int n;
 
+char test[]="nguyen phan du\r\n";
+char * testp =&test[0];
+
+std::cout << std::string(test);
+std::cout << std::string(testp);
+
+
+printf("%s\r\n", test);
+printf("%i\r\n", testp);
+
     if (argc >= 2)
         term = argv[1];
 

@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#include <stdio.h>
 // // For a standalone test, do:
 // // gcc -DMAIN_TEST tcgets.c -o tcgets
 // #ifdef MAIN_TEST
@@ -52,143 +53,142 @@
 struct valid_pairs
 {
 	int out;
-	int in;	
+	int in;
 };
 
-///static const struct valid_pairs valid_parity[], valid_stopbits[], valid_bits[], valid_baud[];
+/// static const struct valid_pairs valid_parity[], valid_stopbits[], valid_bits[], valid_baud[];
 
-static const struct valid_pairs valid_parity[]={
-		{ 0,			'N'},	// No parity
-		{ PARENB,		'E'},	// Even parity
-		{ PARENB|PARODD,	'O'},	// Odd parity
-		{ 0,			-1}
-	};
+static const struct valid_pairs valid_parity[] = {
+	{0, 'N'},				// No parity
+	{PARENB, 'E'},			// Even parity
+	{PARENB | PARODD, 'O'}, // Odd parity
+	{0, -1}};
 
-static const struct valid_pairs valid_stopbits[]={
-		{ 0,		1},
-		{CSTOPB,	2},
-		{ 0,		-1}
-	};
+static const struct valid_pairs valid_stopbits[] = {
+	{0, 1},
+	{CSTOPB, 2},
+	{0, -1}};
 
-static const struct valid_pairs valid_bits[]={
-		{ CS5,	5},
-		{ CS6,	6},
-		{ CS7,	7},
-		{ CS8,	8},
-		{ 0,	-1}
-	};
+static const struct valid_pairs valid_bits[] = {
+	{CS5, 5},
+	{CS6, 6},
+	{CS7, 7},
+	{CS8, 8},
+	{0, -1}};
 
-static const struct valid_pairs valid_baud[]={
-		{B0,		0},
-		{B50,		50},
-		{B75,		75},
-		{B110,		110},
-		{B134,		134},
-		{B150,		150},
-		{B200,		200},
-		{B300,		300},
-		{B600,		600},
-		{B1200,		1200},
-		{B1800,		1800},
-		{B2400,		2400},
-		{B4800,		4800},
-		{B9600,		9600},
-		{B19200,	19200},
-		{B38400,	38400},
-		{B57600,	57600},
-		{B115200,	115200},
-		{B230400,	230400},
-		{0,		-1}};
+static const struct valid_pairs valid_baud[] = {
+	{B0, 0},
+	{B50, 50},
+	{B75, 75},
+	{B110, 110},
+	{B134, 134},
+	{B150, 150},
+	{B200, 200},
+	{B300, 300},
+	{B600, 600},
+	{B1200, 1200},
+	{B1800, 1800},
+	{B2400, 2400},
+	{B4800, 4800},
+	{B9600, 9600},
+	{B19200, 19200},
+	{B38400, 38400},
+	{B57600, 57600},
+	{B115200, 115200},
+	{B230400, 230400},
+	{0, -1}};
 
-
-static struct termios cur_termios;	// Current terminal settings
+static struct termios cur_termios; // Current terminal settings
 
 int termios_open(const char *fname, const char *cmdstr)
 {
-	int fd=open(fname, O_RDWR| O_NOCTTY | O_NDELAY);
-	if(fd<0)
+	int fd = open(fname, O_RDWR | O_NOCTTY | O_NDELAY);
+	if (fd < 0)
 		goto TERMIOS_OPEN_ERR;
 
-	if(ttyname(fd) == NULL)
+	if (ttyname(fd) == NULL)
 		goto TERMIOS_OPEN_ERR;
 
-	if(termios_set(fd, cmdstr) < 0)
+	if (termios_set(fd, cmdstr) < 0)
 		goto TERMIOS_OPEN_ERR;
 
-	return(fd);
+	return (fd);
 
 TERMIOS_OPEN_ERR:
-	if(fd >= 0)
+	if (fd >= 0)
 		close(fd);
 
-	return(-1);
+	return (-1);
 }
 
 int isvalid(unsigned int in, const struct valid_pairs valid[])
 {
 	int n;
-	for(n=0; valid[n].in >= 0; n++)
+	for (n = 0; valid[n].in >= 0; n++)
 	{
-		
-		if(valid[n].in == in)
-			{
-				fprintf(stderr,"%d]\t%d\t<=>\t%d\n", n,	valid[n].in, in);
-				return(valid[n].out);
-			}
+
+		if (valid[n].in == in)
+		{
+			fprintf(stderr, "%d]\t%d\t<=>\t%d\n", n, valid[n].in, in);
+			return (valid[n].out);
+		}
 	}
 
-	return(-1);
+	return (-1);
 }
 
 int termios_set(int fd, const char *cmdstr)
 {
 
-	int baud=-1, bits=-1, stopbits=-1;
-	unsigned char parity=0;
+	int baud = -1, bits = -1, stopbits = -1;
+	unsigned char parity = 0;
 	int values;
 
-	if(cmdstr == NULL)
-		cmdstr=DEFAULT_TTY_SETTINGS;
+	if (cmdstr == NULL)
+		cmdstr = DEFAULT_TTY_SETTINGS;
 
-	values=sscanf(cmdstr, "%i%[nNeEoO]%01i%01i",
-		&baud, &parity, &bits, &stopbits);
-	if(values != 4)
+	values = sscanf(cmdstr, "%i%[nNeEoO]%01i%01i",
+					&baud, &parity, &bits, &stopbits);
+	if (values != 4)
 	{
 		fprintf(stderr, "Bad spec string '%s'\n", cmdstr);
-		return(-1);
+		return (-1);
 	}
 
-	baud=isvalid(baud, valid_baud);
+	baud = isvalid(baud, valid_baud);
 
-	if(baud < 0)
+	if (baud < 0)
 	{
-		fprintf(stderr,"Bad spec string '%s':  Invalid baud rate\n",
-			cmdstr);
-		return(-1);
+		fprintf(stderr, "Bad spec string '%s':  Invalid baud rate\n",
+				cmdstr);
+		return (-1);
 	}
 
-	parity=isvalid((char)toupper(parity), valid_parity);
-	if(parity ==(unsigned char)(-1))
-	{
-		fprintf(stderr, "Bad spec string '%s':  "
-			"Invalid parity specifier\n", cmdstr);
-		return(-1);
-	}
-
-	bits=isvalid(bits, valid_bits);
-	if(bits < 0)
+	parity = isvalid((char)toupper(parity), valid_parity);
+	if (parity == (unsigned char)(-1))
 	{
 		fprintf(stderr, "Bad spec string '%s':  "
-			"Invalid bits specifier\n", cmdstr);
-		return(-1);
+						"Invalid parity specifier\n",
+				cmdstr);
+		return (-1);
 	}
 
-	stopbits=isvalid(stopbits, valid_stopbits);
-	if(stopbits < 0)
+	bits = isvalid(bits, valid_bits);
+	if (bits < 0)
+	{
+		fprintf(stderr, "Bad spec string '%s':  "
+						"Invalid bits specifier\n",
+				cmdstr);
+		return (-1);
+	}
+
+	stopbits = isvalid(stopbits, valid_stopbits);
+	if (stopbits < 0)
 	{
 		fprintf(stderr, "Bad spec string %s:  "
-			"Invalid stop bits specifier\n", cmdstr);
-		return(-1);
+						"Invalid stop bits specifier\n",
+				cmdstr);
+		return (-1);
 	}
 
 	fprintf(stderr, "Configuring for %s\n", cmdstr);
@@ -200,27 +200,73 @@ int termios_set(int fd, const char *cmdstr)
 	// Ignore errors, BREAK condition; restart on any character
 	cur_termios.c_iflag = IGNBRK | IGNPAR | IXANY;
 	cur_termios.c_oflag = 0;
-	cur_termios.c_lflag = 0; 
+	cur_termios.c_lflag = 0;
 
 	// Enable reading, ignore modem lines, enable CTS/RTS
-	cur_termios.c_cflag = CLOCAL | CREAD | CRTSCTS; 
+	cur_termios.c_cflag = CLOCAL | CREAD | CRTSCTS;
 
 	cur_termios.c_cflag |= stopbits;
 	cur_termios.c_cflag |= bits;
 	cur_termios.c_cflag |= parity;
 
 	// Enable error checking when parity enabled
-	if(parity != 0)
-		cur_termios.c_iflag &= ~(IGNPAR|IGNBRK);
+	if (parity != 0)
+		cur_termios.c_iflag &= ~(IGNPAR | IGNBRK);
 
+	cur_termios.c_cc[VMIN] = 0;					   // Timeout needs 0 chars
+	cur_termios.c_cc[VTIME] = DEFAULT_TTY_TIMEOUT; // Timeout in tenths
 
-	cur_termios.c_cc[VMIN]=0;			// Timeout needs 0 chars
-	cur_termios.c_cc[VTIME]=DEFAULT_TTY_TIMEOUT;	// Timeout in tenths
-
-	return(tcsetattr(fd, TCSADRAIN, &cur_termios));	
+	return (tcsetattr(fd, TCSADRAIN, &cur_termios));
 }
 
 int termios_defaults(int fd)
 {
-	return(termios_set(fd, NULL));
+	return (termios_set(fd, NULL));
+}
+
+void dunp_test()
+{
+	printf("dunp test\r\n");
+	fflush(stdout);
+}
+
+int _dunp_state = -1;
+const char *_dunp_options = "";
+
+    char _dunp_buf[256];
+
+int dunp_open(const char *fname, const char *cmdstr)
+{
+	_dunp_options = cmdstr;
+	int r = termios_open(fname, cmdstr);
+	_dunp_state = 1;
+	return r;
+}
+
+int dunp_write(int fd, char *text)
+{
+	int n = write(fd, "Hello!", 6);
+	// usleep((7 + 25) * 100);
+	tcdrain(fd);
+	return n;
+}
+
+char* dunp_read(int fd)
+{
+	int n = read(fd, _dunp_buf, 255);
+	char * r;
+	if (n > 0)
+        {
+            _dunp_buf[n] = 0;
+
+            r=&_dunp_buf[0];
+        }
+	return r;
+}
+
+int dunp_close(int fd)
+{
+	close(fd);
+	_dunp_state = 0;
+	return -1;
 }

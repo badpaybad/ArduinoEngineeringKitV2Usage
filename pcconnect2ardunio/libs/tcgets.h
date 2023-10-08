@@ -14,6 +14,10 @@
 #define DEFAULT_TERM	"/dev/ttyS0"
 #endif
 
+#ifndef CRTSCTS
+#define CRTSCTS 020000000000
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
