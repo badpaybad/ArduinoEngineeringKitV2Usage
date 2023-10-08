@@ -27,6 +27,12 @@ std::cout << std::string(test);
 std::cout << std::string(testp);
 
 
+auto axxx= dunp_test_stdString("abcd");
+
+
+std::cout << std::string(axxx);
+
+
 printf("%s\r\n", test);
 printf("%i\r\n", testp);
 

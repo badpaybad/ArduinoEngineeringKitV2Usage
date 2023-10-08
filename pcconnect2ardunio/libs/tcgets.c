@@ -13,6 +13,7 @@
 #include <ctype.h>
 
 #include <stdio.h>
+
 // // For a standalone test, do:
 // // gcc -DMAIN_TEST tcgets.c -o tcgets
 // #ifdef MAIN_TEST
@@ -226,14 +227,36 @@ int termios_defaults(int fd)
 
 void dunp_test()
 {
-	printf("dunp test\r\n");
+	printf("dunp_test: PING -> PONG\r\n");
 	fflush(stdout);
+}
+
+char* dunp_test_stdString(char *text)
+{
+
+	printf("dunp_test_stdString: %s\r\n", text);
+	fflush(stdout);
+
+	size_t sizeA = strlen(text);
+	char *b = " PONG ";
+	size_t sizeB = strlen(b);
+	size_t size = sizeof(char) * (sizeA + sizeB + 1); // Size of our new memory block large enough to contain both a and b.
+													  // Leave additional space for null terminator
+	char *c =(char*) malloc(size);
+
+	memcpy(c, text, sizeA);		 // Copy a into the first half of c
+	memcpy(c + sizeA, b, sizeB); // Copy b into the second half
+	c[sizeA + sizeB] = '\0';	 // Assign null terminator to last character
+
+	return c;
 }
 
 int _dunp_state = -1;
 const char *_dunp_options = "";
 
-    char _dunp_buf[256];
+char _dunp_buf[256];
+
+int _dunp_lock=0;
 
 int dunp_open(const char *fname, const char *cmdstr)
 {
@@ -245,22 +268,48 @@ int dunp_open(const char *fname, const char *cmdstr)
 
 int dunp_write(int fd, char *text)
 {
-	int n = write(fd, "Hello!", 6);
+	while (_dunp_lock==1)
+	{
+		usleep(100);
+	}
+	
+	_dunp_lock=1;
+
+	int n = write(fd, text, 6);
 	// usleep((7 + 25) * 100);
 	tcdrain(fd);
+
+	_dunp_lock=0;
 	return n;
 }
 
-char* dunp_read(int fd)
-{
-	int n = read(fd, _dunp_buf, 255);
-	char * r;
-	if (n > 0)
-        {
-            _dunp_buf[n] = 0;
+void dunp_lock(){
 
-            r=&_dunp_buf[0];
-        }
+	_dunp_lock=1;
+}
+
+void dunp_lock_release(){
+
+	_dunp_lock=0;
+}
+
+char *dunp_read(int fd)
+{
+	while (_dunp_lock==1)
+	{
+		usleep(100);
+	}
+	_dunp_lock=1;
+	
+	int n = read(fd, _dunp_buf, 255);
+	char *r;
+	if (n > 0)
+	{
+		_dunp_buf[n] = 0;
+
+		r = &_dunp_buf[0];
+	}
+	_dunp_lock=0;
 	return r;
 }
 
